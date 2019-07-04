@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>ブロック崩し</title>
+    <style>
+    	* { padding: 0; margin: 0;　 }
+    	canvas { background: #eee; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas" width="750" height="400"></canvas>
+
+<script>
+	
+   
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+var x = canvas.width/2;
+var y = canvas.height-30;
+var dx = 3;
+var dy = -3;
+var ballRadius = 10;
+var Life = 3;
+var RacketHeight = 10;
+var RacketWidth = 35;
+var RacketX = (canvas.width-RacketWidth)/2;
+var right = false;
+var left = false;
+var blockRowCount = 8;
+var blockColumnCount = 3;
+var blockWidth = 75;
+var blockHeight = 20;
+var blockPadding = 6;
+var blockOffsetTop = 30;
+var blockOffsetLeft = 30;
+var score = 0;
+var a=0;
+
+
+var blocks = [];
+    for(var c=0; c<blockColumnCount; c++) {
+        blocks[c] = [];
+        for(var r=0; r<blockRowCount; r++) {
+            blocks[c][r] = { x: 0, y: 0 ,status:1};
+        }
+    }
+    
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
+document.addEventListener("mousemove", mouseMoveHandler, false);
+
+function mouseMoveHandler(e) {
+    var relativeX = e.clientX - canvas.offsetLeft;
+    if(relativeX > 0 && relativeX < canvas.width) {
+        RacketX = relativeX - RacketWidth/2;
+    }
+}
+function keyDownHandler(e) {
+    if(e.keyCode == 39) {
+        right = true;
+    }
+    else if(e.keyCode == 37) {
+        left = true;
+    }
+}
+function keyUpHandler(e) {
+    if(e.keyCode == 39) {
+        right = false;
+    }
+    else if(e.keyCode == 37) {
+        left = false;
+    }
+}
+
+function drawScore() {
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#AA0000";
+    ctx.fillText("Score: "+score, 8, 20);
+}
+function drawLife() {
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#0095DD";
+    ctx.fillText("Life: "+Life, canvas.width-65, 20);
+}
+    function drawW() {
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#0095DD";
+    ctx.fillText("RacketWidth: "+RacketWidth, canvas.width-200, 160);
+}
+function drawBall() {
+    ctx.beginPath();
+    ctx.arc(x, y, ballRadius, 0, Math.PI*2);
+    ctx.fillStyle = "#0033DD";
+    ctx.fill();
+    ctx.closePath();
+}
+    
+function drawRacket() {
+    ctx.beginPath();
+    ctx.rect(RacketX, canvas.height-RacketHeight, RacketWidth, RacketHeight);
+    ctx.fillStyle = "#009500";
+    ctx.fill();
+    ctx.closePath();
+}
+
+ function drawblocks() {
+        for(var c=0; c<blockColumnCount; c++) {
+            for(var r=0; r<blockRowCount; r++) {
+                if(blocks[c][r].status == 1) {
+                    var blockX = (r*(blockWidth+blockPadding))+blockOffsetLeft;
+                    var blockY = (c*(blockHeight+blockPadding))+blockOffsetTop;
+                    blocks[c][r].x = blockX;
+                    blocks[c][r].y = blockY;
+                    ctx.beginPath();
+                    ctx.rect(blockX, blockY, blockWidth, blockHeight);
+                    ctx.fillStyle = "#00DD44";
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+        }
+    }
+    
+   
+    function collisionDetection() {
+    for(var c=0; c<blockColumnCount; c++) {
+        for(var r=0; r<blockRowCount; r++) {
+            var b = blocks[c][r];
+            if(b.status == 1) {
+                if(x > b.x && x < b.x+blockWidth && y > b.y && y < b.y+blockHeight) {
+                dy = -dy;
+                b.status=0;
+                score++;
+                    if(score == blockRowCount*blockColumnCount) {
+                        alert("CREAR!");
+                        document.location.reload();
+                       
+                       
+                    }
+                }
+            }
+        }
+    }
+}
+    
+  
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    drawblocks();
+    drawBall();
+    drawRacket();
+    drawScore();
+    drawLife();
+    drawW();
+   var a=collisionDetection();
+    
+    if(x + dx > canvas.width-ballRadius /*|| x + dx < ballRadius*/) {
+        dx = -dx;  
+        dx--;
+        dy--;
+    }
+    if(x + dx < ballRadius) {
+        dx=-dx;
+        dy++;
+    }
+     if(y + dy < ballRadius) {
+        dy = -dy;
+         dy++;
+    }
+    else if(y + dy > canvas.height-ballRadius) {
+        if(x > RacketX && x < RacketX + RacketWidth) {
+            dy = -dy;
+            dy--;
+            dx++;
+        }
+        else  if(y+dy>=0  ){
+                 if(x < RacketX || x > RacketX + RacketWidth){
+                Life--;
+                }
+
+            if(!Life) {
+                alert("GAME OVER");
+                document.location.reload();
+            }
+            else {
+                alert("残り"+ Life + "です");
+                RacketWidth=RacketWidth*2;
+                x = canvas.width/2;
+                y = canvas.height-30;
+                dx = 2;
+                dy = -2;
+                RacketX = (canvas.width-RacketWidth)/2;
+            }
+        }
+    }
+    
+
+    if(right && RacketX < canvas.width-RacketWidth) {
+        RacketX += 7;
+    }
+    else if(left && RacketX > 0) {
+        RacketX -= 7;
+    }
+
+    x += dx;
+    y += dy;
+     requestAnimationFrame(draw);
+}
+  draw();
+      
+     
+    
+       
+    
+</script>
+
+</body>
+</html>
